@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use std::fmt::Display;
+use std::ops::{Add, Sub};
 use std::vec;
 
 
@@ -17,38 +18,7 @@ impl PolyRoots {
         PolyRoots { roots, all_reals, degree }
     }
 
-    pub fn from_2nd_degree(poly: &Polynome2S) -> Self {
-        let delta = poly.b * poly.b - 4.0 * poly.a * poly.c;
 
-        if delta > 0.0 {
-            let x1 = (-poly.b - delta.sqrt()) / 2.0 * poly.a;
-            let x2 = (-poly.b + delta.sqrt()) / 2.0 * poly.a;
-            Self {roots: Some(vec![x1, x2]), all_reals: false, degree: 2}
-        }
-        else if delta < 0.0 {
-            Self {roots: None, all_reals: false, degree: 2}
-        }
-        else {
-            let x1 = -poly.b / 2.0 * poly.a;
-            Self {roots: Some(vec![x1]), all_reals: false, degree: 2}
-        }
-    }
-
-    pub fn from_1st_degree(poly: &Polynome2S) -> Self {
-        let root = -poly.c / poly.b;
-
-        Self {roots: Some(vec![root]), all_reals: false, degree: 1}
-
-    }
-
-    pub fn from_0nd_degree(poly: &Polynome2S) -> Self {
-
-       let  mut all_reals = false;
-        if poly.c == 0.0 {
-            all_reals = true;
-        }
-        Self { roots: None, all_reals, degree: 0}
-    }
 }
 
 impl Display for PolyRoots {
@@ -99,6 +69,38 @@ impl Polynome2S {
         Polynome2S { a, b, c }
     }
 
+    pub fn compute_2nd_degree(&self) -> PolyRoots {
+        let delta = self.b * self.b - 4.0 * self.a * self.c;
+
+        if delta > 0.0 {
+            let x1 = (-self.b - delta.sqrt()) / 2.0 * self.a;
+            let x2 = (-self.b + delta.sqrt()) / 2.0 * self.a;
+            PolyRoots {roots: Some(vec![x1, x2]), all_reals: false, degree: 2}
+        }
+        else if delta < 0.0 {
+            PolyRoots {roots: None, all_reals: false, degree: 2}
+        }
+        else {
+            let x1 = -self.b / 2.0 * self.a;
+            PolyRoots {roots: Some(vec![x1]), all_reals: false, degree: 2}
+        }
+    }
+
+    pub fn compute_1st_degree(&self) -> PolyRoots {
+        let root = -self.c / self.b;
+
+        PolyRoots {roots: Some(vec![root]), all_reals: false, degree: 1}
+
+    }
+
+    pub fn compute_0nd_degree(&self) -> PolyRoots {
+
+       let mut all_reals = false;
+        if self.c == 0.0 {
+            all_reals = true;
+        }
+        PolyRoots { roots: None, all_reals, degree: 0}
+    }
     /// Get the degree of the polynome
     pub fn get_poly_degree(&self) -> u8 {
         if self.a != 0.0 {
@@ -115,10 +117,116 @@ impl Polynome2S {
     /// Compute the value of the polynome for a given x
     pub fn get_roots(&self) -> PolyRoots {
         match self.get_poly_degree() {
-            2 => PolyRoots::from_2nd_degree(self),
-            1 => PolyRoots::from_1st_degree(self),
-            0 => PolyRoots::from_0nd_degree(self),
+            2 => self.compute_2nd_degree(),
+            1 => self.compute_1st_degree(),
+            0 => self.compute_0nd_degree(),
             _ => panic!("Polynome degree unavailable")
         }
     }
 }
+
+#[derive(Debug)]
+pub struct PolynomePart {
+    pub sign: char,
+    pub coef: f32,
+    pub power: u8,
+    pub opright: bool, 
+}
+
+impl PolynomePart {
+    fn sign_to_value(sign: char) -> f32 {
+        match sign {
+            '+' => 1.0,
+            '-' => -1.0,
+            _ => panic!("Sign not recognized")
+        }
+    }
+}
+impl Add for PolynomePart {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        if self.power != other.power {
+            panic!("Power of the two polynome parts must be the same")
+        }
+        let coef = self.coef * PolynomePart::sign_to_value(self.sign) + other.coef * PolynomePart::sign_to_value(other.sign);
+
+        let sign = if coef < 0.0 { '-' } else { '+' };
+        PolynomePart {sign, coef, power: self.power, opright: self.opright}
+    }
+}
+
+impl Sub for PolynomePart {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        if self.power != rhs.power {
+            panic!("Power of the two polynome parts must be the same")
+        }
+        let coef = self.coef * PolynomePart::sign_to_value(self.sign) - rhs.coef * PolynomePart::sign_to_value(rhs.sign);
+
+        let sign = if coef < 0.0 { '-' } else { '+' };
+        PolynomePart { sign, coef, power: self.power, opright: self.opright }
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn test_poly_2nd_2soluce()  {
+    let poly = Polynome2S::new(1.0, -3.0, 2.0);
+    let polyroots = poly.get_roots();
+    assert_eq!(polyroots.roots, Some(vec![1.0, 2.0]));
+    assert_eq!(polyroots.all_reals, false);
+    assert_eq!(polyroots.degree, 2);
+}
+
+#[cfg(test)]
+#[test]
+fn test_poly_2nd_1soluce()  {
+    let poly = Polynome2S::new(3.0, 6.0, 3.0);
+    let polyroots = poly.get_roots();
+    assert_eq!(polyroots.roots, Some(vec![-9.0]));
+    assert_eq!(polyroots.all_reals, false);
+    assert_eq!(polyroots.degree, 2);
+}
+
+#[cfg(test)]
+#[test]
+fn test_poly_2nd_0soluce()  {
+    let poly = Polynome2S::new(1.0, 2.0, 3.0);
+    let polyroots = poly.get_roots();
+    assert_eq!(polyroots.roots, None);
+    assert_eq!(polyroots.all_reals, false);
+    assert_eq!(polyroots.degree, 2);
+}
+
+#[cfg(test)]
+#[test]
+fn test_poly_1st()  {
+    let poly = Polynome2S::new(0.0, 3.0, 6.0);
+    let polyroots = poly.get_roots();
+    assert_eq!(polyroots.roots, Some(vec![-2.0]));
+    assert_eq!(polyroots.all_reals, false);
+    assert_eq!(polyroots.degree, 1);
+}
+
+#[cfg(test)]
+#[test]
+fn test_poly_0st_all_reals()  {
+    let poly = Polynome2S::new(0.0, 0.0, 0.0);
+    let polyroots = poly.get_roots();
+    assert_eq!(polyroots.roots, None);
+    assert_eq!(polyroots.all_reals, true);
+    assert_eq!(polyroots.degree, 0);
+}
+
+#[cfg(test)]
+#[test]
+fn test_poly_0st_nosoluce()  {
+    let poly = Polynome2S::new(0.0, 0.0, 6.0);
+    let polyroots = poly.get_roots();
+    assert_eq!(polyroots.roots, None);
+    assert_eq!(polyroots.all_reals, false);
+    assert_eq!(polyroots.degree, 0);
+}
+
