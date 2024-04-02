@@ -9,7 +9,12 @@ fn main() {
         println!("{}", arg);
     }
 
-    let poly = poly_d2::Polynome2S::new(1.0, 2.0, 3.0);
+    let poly = poly_d2::Polynome2S::new(0.0, 6.0, 0.0);
 
     println!("poly: {:?}", poly);
+
+    let polyroots = poly.get_roots();
+
+    println!("The polynomial degree: {}", polyroots.degree);
+    println!("{}", polyroots);
 }

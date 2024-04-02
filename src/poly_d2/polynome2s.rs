@@ -1,6 +1,10 @@
+#![allow(dead_code)]
+
+use std::fmt::Display;
 use std::vec;
 
 
+///Result struct from polynome
 #[derive(Debug)]
 pub struct PolyRoots {
     pub roots: Option<Vec<f32>>,
@@ -14,11 +18,27 @@ impl PolyRoots {
     }
 
     pub fn from_2nd_degree(poly: &Polynome2S) -> Self {
-        
+        let delta = poly.b * poly.b - 4.0 * poly.a * poly.c;
+
+        if delta > 0.0 {
+            let x1 = (-poly.b - delta.sqrt()) / 2.0 * poly.a;
+            let x2 = (-poly.b + delta.sqrt()) / 2.0 * poly.a;
+            Self {roots: Some(vec![x1, x2]), all_reals: false, degree: 2}
+        }
+        else if delta < 0.0 {
+            Self {roots: None, all_reals: false, degree: 2}
+        }
+        else {
+            let x1 = -poly.b / 2.0 * poly.a;
+            Self {roots: Some(vec![x1]), all_reals: false, degree: 2}
+        }
     }
 
     pub fn from_1st_degree(poly: &Polynome2S) -> Self {
-        
+        let root = -poly.c / poly.b;
+
+        Self {roots: Some(vec![root]), all_reals: false, degree: 1}
+
     }
 
     pub fn from_0nd_degree(poly: &Polynome2S) -> Self {
@@ -28,6 +48,38 @@ impl PolyRoots {
             all_reals = true;
         }
         Self { roots: None, all_reals, degree: 0}
+    }
+}
+
+impl Display for PolyRoots {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        
+        if self.roots == None {
+            if self.all_reals {
+                return write!(f, "Each number is a solution")
+            }
+            else {
+                return write!(f, "There is no solution")
+            }
+        }
+        else {
+            let roots = self.roots.as_ref().unwrap();
+            match (self.degree, roots.len()) {
+                (1, 1) => {
+                    return write!(f, "The solution is:\n{}", roots[0])
+                },
+                (2, 1) => {
+                    return write!(f, "Discriminant is zero, the solution is:\n{}", roots[0])
+                },
+                (2, 2) => {
+                    return write!(f, "Discriminant is strictly positive, the two solutions are:\n{}\n{}", roots[0], roots[1])
+                },
+                _ => {
+                    return write!(f, "The polynomial degree is strictly greater than 2, I can't solve.")
+                }
+
+            }
+        }
     }
 
 }
