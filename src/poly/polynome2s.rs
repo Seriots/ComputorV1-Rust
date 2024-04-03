@@ -4,12 +4,6 @@ use std::fmt::Display;
 use std::ops::{Add, Neg, Sub};
 use std::vec;
 
-
-pub union Solution {
-    real: f32,
-    complex: (f32, f32),
-}
-
 ///Result struct from polynome
 #[derive(Debug)]
 pub struct PolyRoots {

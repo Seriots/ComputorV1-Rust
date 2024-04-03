@@ -1,0 +1,3 @@
+[ ] Make Polyroots.roots an object that can stock anything that implement Display
+[ ] Add handling of complex numbers
+[ ] Add reduce fractionnal form
