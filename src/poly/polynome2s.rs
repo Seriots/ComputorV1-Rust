@@ -1,9 +1,14 @@
 #![allow(dead_code)]
 
 use std::fmt::Display;
-use std::ops::{Add, Sub};
+use std::ops::{Add, Neg, Sub};
 use std::vec;
 
+
+pub union Solution {
+    real: f32,
+    complex: (f32, f32),
+}
 
 ///Result struct from polynome
 #[derive(Debug)]
@@ -17,8 +22,6 @@ impl PolyRoots {
     pub fn new(roots: Option<Vec<f32>>, all_reals: bool, degree: u8) -> Self {
         PolyRoots { roots, all_reals, degree }
     }
-
-
 }
 
 impl Display for PolyRoots {
@@ -67,6 +70,23 @@ impl Polynome2S {
     /// Create a new Polynome2S
     pub fn new(a: f32, b: f32, c: f32) -> Self {
         Polynome2S { a, b, c }
+    }
+
+
+    pub fn from_polypart(polypart: &Vec<PolynomePart>) -> Option<Self> {
+        let mut a = 0.0;
+        let mut b = 0.0;
+        let mut c = 0.0;
+
+        for part in polypart.iter() {
+            match part.power {
+                2 => a = part.coef,
+                1 => b = part.coef,
+                0 => c = part.coef,
+                _ => return None
+            }
+        }
+        Some(Polynome2S { a, b, c })
     }
 
     pub fn compute_2nd_degree(&self) -> PolyRoots {
@@ -125,16 +145,23 @@ impl Polynome2S {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct PolynomePart {
-    pub sign: char,
     pub coef: f32,
     pub power: u8,
     pub opright: bool, 
 }
 
 impl PolynomePart {
-    fn sign_to_value(sign: char) -> f32 {
+    pub fn zero() -> Self {
+        PolynomePart { coef: 0.0, power: 0, opright: false }
+    }
+
+    pub fn from_power(power: u8) -> Self {
+        PolynomePart { coef: 0.0, power, opright: false }
+    }
+
+    pub fn sign_to_value(sign: char) -> f32 {
         match sign {
             '+' => 1.0,
             '-' => -1.0,
@@ -142,6 +169,7 @@ impl PolynomePart {
         }
     }
 }
+
 impl Add for PolynomePart {
     type Output = Self;
 
@@ -149,10 +177,10 @@ impl Add for PolynomePart {
         if self.power != other.power {
             panic!("Power of the two polynome parts must be the same")
         }
-        let coef = self.coef * PolynomePart::sign_to_value(self.sign) + other.coef * PolynomePart::sign_to_value(other.sign);
 
-        let sign = if coef < 0.0 { '-' } else { '+' };
-        PolynomePart {sign, coef, power: self.power, opright: self.opright}
+        let coef = self.coef + other.coef ;
+
+        PolynomePart { coef, power: self.power, opright: self.opright}
     }
 }
 
@@ -163,12 +191,28 @@ impl Sub for PolynomePart {
         if self.power != rhs.power {
             panic!("Power of the two polynome parts must be the same")
         }
-        let coef = self.coef * PolynomePart::sign_to_value(self.sign) - rhs.coef * PolynomePart::sign_to_value(rhs.sign);
+        let coef = self.coef - rhs.coef;
 
-        let sign = if coef < 0.0 { '-' } else { '+' };
-        PolynomePart { sign, coef, power: self.power, opright: self.opright }
+        PolynomePart { coef, power: self.power, opright: self.opright }
     }
 }
+
+impl Neg for PolynomePart {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        PolynomePart { coef:-self.coef, power: self.power, opright: self.opright }
+    }
+}
+
+impl Display for PolynomePart {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let sign = if self.coef >= 0.0 {'+'} else {'-'};
+        let coef = self.coef.abs();
+        write!(f, " {} {}x^{}", sign, coef, self.power)
+    }
+}
+
 
 #[cfg(test)]
 #[test]

@@ -1,59 +1,226 @@
-mod poly_d2;
+mod poly;
 
 use std::env;
 
-use poly_d2::PolynomePart;
+use poly::PolynomePart;
+
+use crate::poly::PolyRoots;
 
 /// Parse the input arguments
 /// 5 * X^0 + 4 * X^1 - 9.3 * X^2 = 1 * X^0
-/// format: [+/-:?][whitespace:?][0-9][[.:?][0-9]:?][whitespace:?][*:?][whitespace:?][x/X][whitespace:?][^/**][whitespace:?][0-9] (repeat) [whitespace:?][=][whitespace:?][0-9][[.:?][0-9]:?][whitespace:?][*:?][whitespace:?][x/X][whitespace:?][^/**][whitespace:?][0-9 
 /// split block on +/-/= and parse each block
 
 /// Parse an integer
 /// @param input: the string to parse
-/// @return a tuple with the integer and the length of the parsed string
-fn parse_int(input: &String) -> (i32, i32) {
-    return (0, input.len() as i32)
+/// @return a tuple with the integer and the length of the parsed string and an error code if error has occured
+fn parse_power(input: String, is_exponent: bool, is_x: bool) -> (Option<u8>, usize, i8) {
+    let mut i = 0;
+
+    if is_x == false {
+        return (Some(0), 0, 0);
+    }
+    for char in input.chars() {
+        if char == '.' {
+            return (None, 0, -1);
+        }
+        if char < '0' || char > '9' {
+            break;
+        }
+        i += 1;
+    }
+
+    if i == 0 {
+        if is_exponent {
+            return (None, 0, -1);
+        } else {
+            return (Some(1), 0, 0);
+        }
+    }
+    let power = input[..i].parse::<u8>();
+    if power.is_err() {
+        return (None, 0, -1);
+    }
+    return (Some(power.unwrap()), i, 0);
+
 }
 
 /// Parse a float
 /// @param input: the string to parse
-/// @return a tuple with the float and the length of the parsed string
-fn parse_float(input: &String) -> (f32, i32) {
-    return (0.0, input.len() as i32)
+/// @return a tuple with the float and the length of the parsed string and an error code if error has occured
+fn parse_float(input: String, is_signed: bool) -> (Option<f32>, usize, i8) {
+    let mut i = 0;
+    let mut dot = 0;
+    for char in input.chars() {
+        if char == '.' && dot == 0 {
+            dot += 1;
+        }
+        else if char < '0' || char > '9' {
+            break;
+        }
+        i += 1;
+    }
+    if i == 0 {
+        if is_signed {
+            return (None, 0, -1);
+        } else {
+            return (Some(1.0), 0, 0);
+        }
+    }
+    let float = input[..i].parse::<f32>();
+    if float.is_err() {
+        return (None, 0, -1);
+    }
+    return (Some(float.unwrap()), i, 0)
+}
+
+///Parse the sign, we can have multiple sign (+/-) and the result is equivalent to the multiplication between all of them
+/// @param input: the string to parse
+/// @return a tuple with the sign and the length of the parsed string
+fn parse_sign(input: String) -> (Option<char>, usize, i8) {
+    let mut i = 0;
+    let mut sign_count = 0;
+    for char in input.chars() {
+        if char == '-' {
+            sign_count += 1;
+        } else if char != '+' {
+            break ;
+        }
+        i += 1;
+    }
+    (Some(if sign_count % 2 == 0 {'+'} else {'-'}), i, 0)
 }
 
 /// Parse a polynome part
 /// @param input: the string to parse
 /// @param opright: true if the polynome part is on the right side of the equation
 /// @return a tuple with the polynome part and the length of the parsed string
-fn parse_polypart(input: &String, opright: bool) -> (PolynomePart, i32) {
-    return (PolynomePart { sign: '+', coef: 0.0, power: 0, opright: opright }, 1)
+fn parse_polypart(input: String, opright: bool) -> (Option<PolynomePart>, usize, i8) {
+    let input_base_length = input.len();
+    let mut buffer = input;
+    let mut is_signed = false;
+    let mut is_multiplier = false;
+    let mut is_x = false;
+    let mut is_exponent = false;
+    let (sign, end, error) = parse_sign(buffer.clone());
+    if error < 0 {
+        return (None, 0, error)
+    }
+    if end != 0 {
+        is_signed = true;
+    }
+    buffer = buffer[end..].trim_start().to_string();
+    if buffer.len() <= 0 {
+        return (None, 0, -1);
+    }
+    let (coef, end, error) = parse_float(buffer.clone(), is_signed);
+    if error < 0 {
+        return (None, 0, error)
+    }
+    let signed_coef = coef.unwrap() * PolynomePart::sign_to_value(sign.unwrap());
+    buffer = buffer[end..].trim_start().to_string();
+    if buffer.starts_with("*") {
+        buffer = buffer[1..].trim().to_string();
+        is_multiplier = true;
+    }
+    if buffer.starts_with("x") || buffer.starts_with("X") {
+        buffer = buffer[1..].trim().to_string();
+        is_x = true;
+    } else if is_multiplier == true {
+        return (None, 0, -1);
+    }
+    if buffer.starts_with("^") && is_x == true {
+        buffer = buffer[1..].trim().to_string();
+        is_exponent = true;
+    } else if buffer.starts_with("**") && is_x == true {
+        buffer = buffer[2..].trim().to_string();
+        is_exponent = true;
+    }
+    let (power, end, error) = parse_power(buffer.clone(), is_exponent, is_x);
+
+    if error < 0 {
+        return (None, 0, error);
+    }
+    buffer = buffer[end..].trim_start().to_string();
+    return (Some(PolynomePart { coef: signed_coef, power: power.unwrap(), opright }), input_base_length - buffer.len(), 0)
 }
 
 /// Parse the input arguments
 /// We suppose that all block are polynome part so we run parse_polypart on each block
-fn parse_input(input: String) {
+fn parse_input(input: String) -> Option<Vec<PolynomePart>> {
 
     let mut all_part: Vec<PolynomePart> = Vec::new();
     let mut buffer = input.trim().to_string();
     let mut opright = false;
 
     while buffer.len() > 0 {
-        let (new_part, end) = parse_polypart(&buffer, opright);
+        let (new_part, end, error) = parse_polypart(buffer.clone(), opright);
+        if error < 0 {
+            return None;
+        }
+        if end == 0 {
+            return None;
+        }
         
-        buffer = buffer[end as usize..].trim().to_string();
-        all_part.push(new_part);
+        buffer = buffer[end..].trim_start().to_string();
+        all_part.push(new_part.unwrap());
 
         if buffer.starts_with("=") {
-            buffer = buffer[1..].trim().to_string();
+            if opright == true {
+                return None
+            }
+            buffer = buffer[1..].trim_start().to_string();
             opright = true;
         }
     }
-    for elem in all_part.iter() {
-        println!("{:?}", elem);
-    }
+    return Some(all_part);
 }
+
+fn display_expression(poly_parts: &Vec<PolynomePart>, reduced_poly: &Vec<PolynomePart>, power_reduced: &Vec<u8>) {
+    let mut is_opright = false;
+    for elem in reduced_poly.iter() {
+        print!("{}", elem)
+    }
+
+    for elem in poly_parts.iter() {
+        if !power_reduced.contains(&elem.power) {
+            if is_opright != elem.opright {
+                is_opright = elem.opright;
+                print!(" =")
+            }
+            print!("{}", elem);
+        }
+    }
+    if is_opright == false {
+        print!(" = 0");
+    }
+    println!();
+}
+
+fn reduce_expression(poly_parts: Vec<PolynomePart>) -> Vec<PolynomePart> {
+    let mut reduced_poly: Vec<PolynomePart> = Vec::new();
+    let mut power_reduced: Vec<u8> = Vec::new();
+    
+    display_expression(&poly_parts, &reduced_poly, &power_reduced);
+    for i in 0..poly_parts.len() {
+        let power = poly_parts[i].power;
+        if !power_reduced.contains(&power) {
+            let mut value = if poly_parts[i].opright == false { poly_parts[i].clone() } else { -poly_parts[i].clone() };
+            for j in (i + 1)..poly_parts.len() {
+                if poly_parts[j].power == power {
+                    value = if poly_parts[j].opright == false { value + poly_parts[j] } else { value - poly_parts[j] };
+                }
+            }
+            reduced_poly.push(value);
+            power_reduced.push(power);
+            display_expression(&poly_parts, &reduced_poly, &power_reduced);
+        }
+    }
+
+    reduced_poly.sort_by(|a, b| a.power.cmp(&b.power));
+    display_expression(&poly_parts, &reduced_poly, &power_reduced);
+    return reduced_poly;
+}
+
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -61,15 +228,70 @@ fn main() {
     let mut iter = args.iter();
     iter.next();
     for arg in iter {
-        parse_input(arg.to_string())
+        if let Some(user_input) = parse_input(arg.to_string()) {
+            let reduced_poly = reduce_expression(user_input);
+             
+            if let Some(poly2s) = poly::Polynome2S::from_polypart(&reduced_poly) {
+                let polyroots = poly2s.get_roots();
+                    println!("The polynomial degree: {}", polyroots.degree);
+                    println!("{}", polyroots);
+            }
+            else {
+                let max_power = reduced_poly.iter().max_by(|a, b| a.power.cmp(&b.power)).unwrap().power;
+                let polyroots = PolyRoots::new(Some(vec![]), false, max_power);
+                println!("The polynomial degree: {}", polyroots.degree);
+                println!("{}", polyroots);
+            }
+        }
     }
-
-    let poly = poly_d2::Polynome2S::new(0.0, 6.0, 0.0);
-
-    println!("poly: {:?}", poly);
-
-    let polyroots = poly.get_roots();
-
-    println!("The polynomial degree: {}", polyroots.degree);
-    println!("{}", polyroots);
 }
+
+#[cfg(test)]
+#[test]
+fn general_test_polyparser() {
+    assert_ne!(None, parse_input("1 * x + 54 * x ^ 1 - 40 * x ^ 2 = 3 * X ^ 2".to_string()));
+    assert_eq!(None, parse_input("5+1*x^2 +45X^1 - 20X^2 + 30X + 20= X - 20X -40X^2 + 80 -80X9.5 + 20".to_string()));
+    assert_ne!(None, parse_input("1x = 0".to_string()));
+    assert_ne!(None, parse_input("1 = 0".to_string()));
+    assert_ne!(None, parse_input("1x^3 = 0".to_string()));
+    assert_eq!(None, parse_input("1* = 0".to_string()));
+    assert_eq!(None, parse_input("^5 = 0".to_string()));
+    assert_eq!(None, parse_input("1^5 = 0".to_string()));
+    assert_eq!(None, parse_input("+1^5 = 0".to_string()));
+    assert_ne!(None, parse_input("5+-+--1x = 0".to_string()));
+    assert_ne!(None, parse_input("5+1x2 = 0".to_string()));
+}
+
+#[cfg(test)]
+#[test]
+fn sign_test_polyparser() {
+    assert_eq!(None, parse_input("-+-+-+--".to_string()));
+}
+
+#[cfg(test)]
+#[test]
+fn float_test_polyparser() {
+    assert_eq!(None, parse_input(". = 9".to_string()));
+    assert_ne!(None, parse_input(".9 = 9".to_string()));
+    assert_ne!(None, parse_input("9. = 9".to_string()));
+    assert_ne!(None, parse_input("99 = 9".to_string()));
+    assert_ne!(None, parse_input("99.99 = 9".to_string()));
+}
+
+#[cfg(test)]
+#[test]
+fn x_test_polyparser() {
+    assert_ne!(None, parse_input("x = 9".to_string()));
+    assert_eq!(None, parse_input("x*5 = 9".to_string()));
+    assert_eq!(None, parse_input("xa5 = 9".to_string()));
+    assert_ne!(None, parse_input("x**5 = 9".to_string()));
+    assert_eq!(None, parse_input("x   * *5 = 9".to_string()));
+    assert_ne!(None, parse_input("X^5 = 9".to_string()));
+    assert_eq!(None, parse_input("X^^5 = 9".to_string()));
+    assert_eq!(None, parse_input("X^ ^5 = 9".to_string()));
+    assert_ne!(None, parse_input("1*X = 9".to_string()));
+    assert_eq!(None, parse_input("1**X = 9".to_string()));
+    assert_ne!(None, parse_input("98X = 9".to_string()));
+    assert_ne!(None, parse_input("98 X = 9".to_string()));
+}
+
