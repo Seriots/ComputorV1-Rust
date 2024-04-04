@@ -33,10 +33,10 @@ impl Display for PolyRoots {
                     return write!(f, "Discriminant is zero, the solution is:\n{}", roots[0])
                 },
                 (2, true, false) => {
-                    return write!(f, "Discriminant is strictly positive, the two solutions are:\n{}\n{}", roots[0], roots[1])
+                    return write!(f, "Discriminant is strictly positive, the two solutions are:\n{}\n\n{}", roots[0], roots[1])
                 },
                 (2, false, true) => {
-                    return write!(f, "Discriminant is strictly negative, there is no real solution, complexes solutions are:\n{}\n{}", roots[0], roots[1])
+                    return write!(f, "Discriminant is strictly negative, there is no real solution, complexes solutions are:\n{}\n\n{}", roots[0], roots[1])
                 },
                 _ => {
                     return write!(f, "The polynomial degree is strictly greater than 2, I can't solve.")

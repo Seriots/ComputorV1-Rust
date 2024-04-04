@@ -8,6 +8,8 @@ use poly::PolynomePart;
 use crate::poly::PolyRoots;
 use parsing::parse_input;
 
+
+
 fn display_expression(poly_parts: &Vec<PolynomePart>, reduced_poly: &Vec<PolynomePart>, power_reduced: &Vec<u8>) {
     let mut is_opright = false;
     for elem in reduced_poly.iter() {
@@ -32,6 +34,8 @@ fn display_expression(poly_parts: &Vec<PolynomePart>, reduced_poly: &Vec<Polynom
 fn reduce_expression(poly_parts: Vec<PolynomePart>) -> Vec<PolynomePart> {
     let mut reduced_poly: Vec<PolynomePart> = Vec::new();
     let mut power_reduced: Vec<u8> = Vec::new();
+    let mut steps = 1;
+    print!("Step 0:       ");
     display_expression(&poly_parts, &reduced_poly, &power_reduced);
     for i in 0..poly_parts.len() {
         let power = poly_parts[i].power;
@@ -47,12 +51,15 @@ fn reduce_expression(poly_parts: Vec<PolynomePart>) -> Vec<PolynomePart> {
             reduced_poly.push(value);
             power_reduced.push(power);
             if display {
+                print!("Step {}:       ", steps);
+                steps += 1;
                 display_expression(&poly_parts, &reduced_poly, &power_reduced);
             }
         }
     }
 
     reduced_poly.sort_by(|a, b| a.power.cmp(&b.power));
+    print!("Reduced form: ");
     display_expression(&poly_parts, &reduced_poly, &power_reduced);
     return reduced_poly;
 }
@@ -80,13 +87,6 @@ fn main() {
             }
         }
     }
-    
-    //let vec: Vec<Box<dyn Solution2s>> = vec![Box::new(ComplexeSolution2s::new()), Box::new(RealSimpleSolution2s::new()), Box::new(RealSolution2s::new())];
-    //for elem in vec.iter() {
-    //    println!("{}", elem);
-    //}
-
-
 }
 
 #[cfg(test)]
