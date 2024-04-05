@@ -1,4 +1,4 @@
 [x] Make Polyroots.roots an object that can stock anything that implement Display
 [x] Add handling of complex numbers
 [x] Add reduce fractionnal form
-[ ] Move the first sign next to the number in display
+[x] Move the first sign next to the number in display

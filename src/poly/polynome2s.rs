@@ -179,7 +179,7 @@ impl Add for PolynomePart {
             panic!("Power of the two polynome parts must be the same")
         }
 
-        let coef = self.coef + other.coef ;
+        let coef = self.coef + other.coef;
 
         PolynomePart { coef, power: self.power, opright: self.opright}
     }
@@ -208,8 +208,19 @@ impl Neg for PolynomePart {
 
 impl Display for PolynomePart {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
         let sign = if self.coef >= 0.0 {'+'} else {'-'};
         let coef = self.coef.abs();
+        if let Some(precision) = f.precision() {
+            if precision == 1 {
+                if sign == '+' {
+                    return write!(f, "{}x^{}", coef, self.power);
+                }
+                else {
+                    return write!(f, "{}{}x^{}", sign, coef, self.power);
+                }
+            }
+        }
         write!(f, " {} {}x^{}", sign, coef, self.power)
     }
 }

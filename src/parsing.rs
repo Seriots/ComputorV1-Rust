@@ -140,7 +140,11 @@ fn parse_polypart(input: String, opright: bool) -> (Option<PolynomePart>, usize,
         return (None, 0, error);
     }
     buffer = buffer[end..].trim_start().to_string();
-    return (Some(PolynomePart { coef: signed_coef, power: power.unwrap(), opright }), input_base_length - buffer.len(), 0)
+    if signed_coef != 0.0 {
+        return (Some(PolynomePart { coef: signed_coef, power: power.unwrap(), opright }), input_base_length - buffer.len(), 0)
+    } else {
+        return (None, input_base_length - buffer.len(), 0);
+    }
 }
 
 /// Parse the input arguments
@@ -161,7 +165,9 @@ pub fn parse_input(input: String) -> Option<Vec<PolynomePart>> {
         }
         
         buffer = buffer[end..].trim_start().to_string();
-        all_part.push(new_part.unwrap());
+        if !new_part.is_none() {
+            all_part.push(new_part.unwrap());
+        }
 
         if buffer.starts_with("=") {
             if opright == true {

@@ -1,5 +1,6 @@
 mod poly;
 mod parsing;
+mod test;
 
 use std::env;
 
@@ -12,17 +13,26 @@ use parsing::parse_input;
 
 fn display_expression(poly_parts: &Vec<PolynomePart>, reduced_poly: &Vec<PolynomePart>, power_reduced: &Vec<u8>) {
     let mut is_opright = false;
+    let mut first = 1;
+
     for elem in reduced_poly.iter() {
-        print!("{}", elem)
+        print!("{:.prec$}", elem, prec=first);
+        if first == 1 {
+            first = 0;
+        }
     }
 
     for elem in poly_parts.iter() {
         if !power_reduced.contains(&elem.power) {
             if is_opright != elem.opright {
                 is_opright = elem.opright;
-                print!(" =")
+                print!(" = ");
+                first = 1;
             }
-            print!("{}", elem);
+            print!("{:.prec$}", elem, prec=first);
+            if first == 1 {
+                first = 0;
+            }
         }
     }
     if is_opright == false {
@@ -68,6 +78,7 @@ fn reduce_expression(poly_parts: Vec<PolynomePart>) -> Vec<PolynomePart> {
 fn main() {
     let args: Vec<String> = env::args().collect();
 
+    // skip first argument
     let mut iter = args.iter();
     iter.next();
     for arg in iter {
@@ -77,64 +88,17 @@ fn main() {
             if let Some(poly2s) = poly::Polynome2S::from_polypart(&reduced_poly) {
                 let polyroots = poly2s.get_roots();
                     println!("The polynomial degree: {}", polyroots.degree);
-                    println!("{}", polyroots);
+                    println!("{}\n", polyroots);
             }
             else {
                 let max_power = reduced_poly.iter().max_by(|a, b| a.power.cmp(&b.power)).unwrap().power;
                 let polyroots = PolyRoots::new(None, false, max_power, 0.0);
                 println!("The polynomial degree: {}", polyroots.degree);
-                println!("{}", polyroots);
+                println!("{}\n", polyroots);
             }
         }
     }
 }
 
-#[cfg(test)]
-#[test]
-fn general_test_polyparser() {
-    assert_ne!(None, parse_input("1 * x + 54 * x ^ 1 - 40 * x ^ 2 = 3 * X ^ 2".to_string()));
-    assert_eq!(None, parse_input("5+1*x^2 +45X^1 - 20X^2 + 30X + 20= X - 20X -40X^2 + 80 -80X9.5 + 20".to_string()));
-    assert_ne!(None, parse_input("1x = 0".to_string()));
-    assert_ne!(None, parse_input("1 = 0".to_string()));
-    assert_ne!(None, parse_input("1x^3 = 0".to_string()));
-    assert_eq!(None, parse_input("1* = 0".to_string()));
-    assert_eq!(None, parse_input("^5 = 0".to_string()));
-    assert_eq!(None, parse_input("1^5 = 0".to_string()));
-    assert_eq!(None, parse_input("+1^5 = 0".to_string()));
-    assert_ne!(None, parse_input("5+-+--1x = 0".to_string()));
-    assert_ne!(None, parse_input("5+1x2 = 0".to_string()));
-}
 
-#[cfg(test)]
-#[test]
-fn sign_test_polyparser() {
-    assert_eq!(None, parse_input("-+-+-+--".to_string()));
-}
-
-#[cfg(test)]
-#[test]
-fn float_test_polyparser() {
-    assert_eq!(None, parse_input(". = 9".to_string()));
-    assert_ne!(None, parse_input(".9 = 9".to_string()));
-    assert_ne!(None, parse_input("9. = 9".to_string()));
-    assert_ne!(None, parse_input("99 = 9".to_string()));
-    assert_ne!(None, parse_input("99.99 = 9".to_string()));
-}
-
-#[cfg(test)]
-#[test]
-fn x_test_polyparser() {
-    assert_ne!(None, parse_input("x = 9".to_string()));
-    assert_eq!(None, parse_input("x*5 = 9".to_string()));
-    assert_eq!(None, parse_input("xa5 = 9".to_string()));
-    assert_ne!(None, parse_input("x**5 = 9".to_string()));
-    assert_eq!(None, parse_input("x   * *5 = 9".to_string()));
-    assert_ne!(None, parse_input("X^5 = 9".to_string()));
-    assert_eq!(None, parse_input("X^^5 = 9".to_string()));
-    assert_eq!(None, parse_input("X^ ^5 = 9".to_string()));
-    assert_ne!(None, parse_input("1*X = 9".to_string()));
-    assert_eq!(None, parse_input("1**X = 9".to_string()));
-    assert_ne!(None, parse_input("98X = 9".to_string()));
-    assert_ne!(None, parse_input("98 X = 9".to_string()));
-}
 
