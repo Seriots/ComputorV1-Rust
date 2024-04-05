@@ -102,7 +102,7 @@ impl Display for RealSolution2s {
         if whole_number == whole_number.trunc() {
             return write!(f, "x{} = {}", x_root, whole_number);
         }
-        if self.delta != self.delta.trunc() || self.denominator != self.denominator.trunc() || self.numerator != self.numerator.trunc() {
+        if self.delta != self.delta.trunc() || self.denominator != self.denominator.trunc() || self.numerator != self.numerator.trunc(){
             return write!(f, "x{} = {}", x_root, (self.numerator + self.delta_sign as f32 * self.delta.sqrt()) / self.denominator);
         } else {
             let (factorised_part, numerator_part, delta_part, denominator_part) = simplify_expression(self.delta as u32, self.numerator.trunc() as i32, self.denominator.trunc() as i32, self.delta_sign);
@@ -142,9 +142,3 @@ impl Solution2s for RealSolution2s {
     }
 }
 
-
-impl Solution2s for f32 {
-    fn compute(&self) -> f32 {
-        *self
-    }
-}

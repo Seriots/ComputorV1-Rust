@@ -1,10 +1,6 @@
 
 use crate::poly::PolynomePart;
 
-/// Parse the input arguments
-/// 5 * X^0 + 4 * X^1 - 9.3 * X^2 = 1 * X^0
-/// split block on +/-/= and parse each block
-
 /// Parse an integer
 /// @param input: the string to parse
 /// @param is_exponent: true if there is an exponent symbol before
@@ -45,7 +41,7 @@ fn parse_power(input: String, is_exponent: bool, is_x: bool) -> (Option<u8>, usi
 /// @param input: the string to parse
 /// @param is_signed: true if there is a sign before
 /// @return a tuple with the float and the length of the parsed string and an error code if error has occured
-fn parse_float(input: String, is_signed: bool) -> (Option<f32>, usize, i8) {
+fn parse_float(input: String) -> (Option<f32>, usize, i8) {
     let mut i = 0;
     let mut dot = 0;
     for char in input.chars() {
@@ -58,11 +54,7 @@ fn parse_float(input: String, is_signed: bool) -> (Option<f32>, usize, i8) {
         i += 1;
     }
     if i == 0 {
-        if is_signed {
-            return (None, i, -1);
-        } else {
-            return (Some(1.0), i, 0);
-        }
+        return (Some(1.0), i, 0);
     }
     let float = input[..i].parse::<f32>();
     if float.is_err() {
@@ -98,7 +90,6 @@ fn parse_sign(input: String, first: bool) -> (Option<char>, usize, i8) {
 fn parse_polypart(input: String, opright: bool, first: bool) -> (Option<PolynomePart>, usize, i8) {
     let input_base_length = input.len();
     let mut buffer = input;
-    let mut is_signed = false;
     let mut is_multiplier = false;
     let mut is_x = false;
     let mut is_exponent = false;
@@ -106,14 +97,11 @@ fn parse_polypart(input: String, opright: bool, first: bool) -> (Option<Polynome
     if error < 0 {
         return (None, input_base_length - buffer.len(), error)
     }
-    if end != 0 {
-        is_signed = true;
-    }
     buffer = buffer[end..].trim_start().to_string();
     if buffer.len() <= 0 {
         return (None, input_base_length - buffer.len(), -1);
     }
-    let (coef, end, error) = parse_float(buffer.clone(), is_signed);
+    let (coef, end, error) = parse_float(buffer.clone());
     if error < 0 {
         return (None, input_base_length - buffer.len(), error)
     }

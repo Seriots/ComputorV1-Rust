@@ -89,6 +89,11 @@ pub fn simplify_expression(delta: u32, numerator: i32, denominator: i32, delta_s
     }
 
     (_, facto_part, denominator_part) = factorise(&mut facto_part, &mut denominator_part);
+    if denominator_part.iter().product::<i32>() <= -1 {
+        denominator_part.push(-1);
+        numerator_part.push(-1);
+        delta_part.whole_part.push(-1);
+    }
 
     return (facto_part.iter().product::<i32>(), numerator_part.iter().product::<i32>(), delta_part, denominator_part.iter().product::<i32>());
 }

@@ -6,67 +6,6 @@ use std::vec;
 
 use super::{ComplexeSolution2s, RealSolution2s, Solution2s};
 
-///Result struct from polynome
-#[derive(Debug)]
-pub struct PolyRoots {
-    pub roots: Option<Vec<Box<dyn Solution2s>>>,
-    pub all_reals: bool,
-    pub degree: u8,
-    pub delta: f32,
-}
-
-impl PolyRoots {
-    pub fn new(roots: Option<Vec<Box<dyn Solution2s>>>, all_reals: bool, degree: u8, delta: f32) -> Self {
-        PolyRoots { roots, all_reals, degree, delta }
-    }
-
-    pub fn compute(&self) -> Option<Vec<f32>> {
-        if let Some(roots) = &self.roots {
-            let mut result: Vec<f32> = Vec::new();
-            for root in roots.iter() {
-                result.push(root.compute());
-            }
-            Some(result)
-        } else {
-            None
-        }
-    
-    }
-}
-
-impl Display for PolyRoots {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        
-        if let Some(roots) = &self.roots {
-            match (self.degree, self.delta > 0.0, self.delta < 0.0) {
-                (1, _, _) => {
-                    return write!(f, "The solution is:\n{:.1}", roots[0])
-                },
-                (2, false, false) => {
-                    return write!(f, "Discriminant is zero, the solution is:\n\n{:.1}", roots[0])
-                },
-                (2, true, false) => {
-                    return write!(f, "Discriminant is strictly positive, the two solutions are:\n\n{:.1}\n\n{:.2}", roots[0], roots[1])
-                },
-                (2, false, true) => {
-                    return write!(f, "Discriminant is strictly negative, there is no real solution, complexes solutions are:\n\n{:.1}\n\n{:.2}", roots[0], roots[1])
-                },
-                _ => {
-                    return write!(f, "The polynomial degree is strictly greater than 2, I can't solve.")
-                }
-    
-            }
-        } else {
-            if self.all_reals {
-                return write!(f, "Each number is a solution")
-            }
-            else {
-                return write!(f, "There is no solution")
-            }
-        }
-    }
-
-}
 
 /// Polynome2S is a struct that represents a 2nd degree polynome
 #[derive(Debug)]
@@ -76,13 +15,11 @@ pub struct Polynome2S {
     pub c: f32,
 }
 
-
 impl Polynome2S {
     /// Create a new Polynome2S
     pub fn new(a: f32, b: f32, c: f32) -> Self {
         Polynome2S { a, b, c }
     }
-
 
     pub fn from_polypart(polypart: &Vec<PolynomePart>) -> Option<Self> {
         let mut a = 0.0;
@@ -236,4 +173,66 @@ impl Display for PolynomePart {
         }
         write!(f, " {} {}x^{}", sign, coef, self.power)
     }
+}
+
+///Result struct from polynome
+#[derive(Debug)]
+pub struct PolyRoots {
+    pub roots: Option<Vec<Box<dyn Solution2s>>>,
+    pub all_reals: bool,
+    pub degree: u8,
+    pub delta: f32,
+}
+
+impl PolyRoots {
+    pub fn new(roots: Option<Vec<Box<dyn Solution2s>>>, all_reals: bool, degree: u8, delta: f32) -> Self {
+        PolyRoots { roots, all_reals, degree, delta }
+    }
+
+    pub fn compute(&self) -> Option<Vec<f32>> {
+        if let Some(roots) = &self.roots {
+            let mut result: Vec<f32> = Vec::new();
+            for root in roots.iter() {
+                result.push(root.compute());
+            }
+            Some(result)
+        } else {
+            None
+        }
+    
+    }
+}
+
+impl Display for PolyRoots {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        
+        if let Some(roots) = &self.roots {
+            match (self.degree, self.delta > 0.0, self.delta < 0.0) {
+                (1, _, _) => {
+                    return write!(f, "The solution is:\n{:.1}", roots[0])
+                },
+                (2, false, false) => {
+                    return write!(f, "Discriminant is zero, the solution is:\n\n{:.1}", roots[0])
+                },
+                (2, true, false) => {
+                    return write!(f, "Discriminant is strictly positive, the two solutions are:\n\n{:.1}\n\n{:.2}", roots[0], roots[1])
+                },
+                (2, false, true) => {
+                    return write!(f, "Discriminant is strictly negative, there is no real solution, complexes solutions are:\n\n{:.1}\n\n{:.2}", roots[0], roots[1])
+                },
+                _ => {
+                    return write!(f, "The polynomial degree is strictly greater than 2, I can't solve.")
+                }
+    
+            }
+        } else {
+            if self.all_reals {
+                return write!(f, "Each number is a solution")
+            }
+            else {
+                return write!(f, "There is no solution")
+            }
+        }
+    }
+
 }
