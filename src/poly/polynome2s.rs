@@ -19,6 +19,19 @@ impl PolyRoots {
     pub fn new(roots: Option<Vec<Box<dyn Solution2s>>>, all_reals: bool, degree: u8, delta: f32) -> Self {
         PolyRoots { roots, all_reals, degree, delta }
     }
+
+    pub fn compute(&self) -> Option<Vec<f32>> {
+        if let Some(roots) = &self.roots {
+            let mut result: Vec<f32> = Vec::new();
+            for root in roots.iter() {
+                result.push(root.compute());
+            }
+            Some(result)
+        } else {
+            None
+        }
+    
+    }
 }
 
 impl Display for PolyRoots {
@@ -27,16 +40,16 @@ impl Display for PolyRoots {
         if let Some(roots) = &self.roots {
             match (self.degree, self.delta > 0.0, self.delta < 0.0) {
                 (1, _, _) => {
-                    return write!(f, "The solution is:\n{}", roots[0])
+                    return write!(f, "The solution is:\n{:.1}", roots[0])
                 },
                 (2, false, false) => {
-                    return write!(f, "Discriminant is zero, the solution is:\n{}", roots[0])
+                    return write!(f, "Discriminant is zero, the solution is:\n\n{:.1}", roots[0])
                 },
                 (2, true, false) => {
-                    return write!(f, "Discriminant is strictly positive, the two solutions are:\n{}\n\n{}", roots[0], roots[1])
+                    return write!(f, "Discriminant is strictly positive, the two solutions are:\n\n{:.1}\n\n{:.2}", roots[0], roots[1])
                 },
                 (2, false, true) => {
-                    return write!(f, "Discriminant is strictly negative, there is no real solution, complexes solutions are:\n{}\n\n{}", roots[0], roots[1])
+                    return write!(f, "Discriminant is strictly negative, there is no real solution, complexes solutions are:\n\n{:.1}\n\n{:.2}", roots[0], roots[1])
                 },
                 _ => {
                     return write!(f, "The polynomial degree is strictly greater than 2, I can't solve.")
@@ -224,65 +237,3 @@ impl Display for PolynomePart {
         write!(f, " {} {}x^{}", sign, coef, self.power)
     }
 }
-
-
-//#[cfg(test)]
-//#[test]
-//fn test_poly_2nd_2soluce()  {
-//    let poly = Polynome2S::new(1.0, -3.0, 2.0);
-//    let polyroots = poly.get_roots();
-//    assert_eq!(polyroots.roots, Some(vec![1.0, 2.0]));
-//    assert_eq!(polyroots.all_reals, false);
-//    assert_eq!(polyroots.degree, 2);
-//}
-
-//#[cfg(test)]
-//#[test]
-//fn test_poly_2nd_1soluce()  {
-//    let poly = Polynome2S::new(3.0, 6.0, 3.0);
-//    let polyroots = poly.get_roots();
-//    assert_eq!(polyroots.roots, Some(vec![-9.0]));
-//    assert_eq!(polyroots.all_reals, false);
-//    assert_eq!(polyroots.degree, 2);
-//}
-
-//#[cfg(test)]
-//#[test]
-//fn test_poly_2nd_0soluce()  {
-//    let poly = Polynome2S::new(1.0, 2.0, 3.0);
-//    let polyroots = poly.get_roots();
-//    assert_eq!(polyroots.roots, None);
-//    assert_eq!(polyroots.all_reals, false);
-//    assert_eq!(polyroots.degree, 2);
-//}
-
-//#[cfg(test)]
-//#[test]
-//fn test_poly_1st()  {
-//    let poly = Polynome2S::new(0.0, 3.0, 6.0);
-//    let polyroots = poly.get_roots();
-//    assert_eq!(polyroots.roots, Some(vec![-2.0]));
-//    assert_eq!(polyroots.all_reals, false);
-//    assert_eq!(polyroots.degree, 1);
-//}
-
-//#[cfg(test)]
-//#[test]
-//fn test_poly_0st_all_reals()  {
-//    let poly = Polynome2S::new(0.0, 0.0, 0.0);
-//    let polyroots = poly.get_roots();
-//    assert_eq!(polyroots.roots, None);
-//    assert_eq!(polyroots.all_reals, true);
-//    assert_eq!(polyroots.degree, 0);
-//}
-
-//#[cfg(test)]
-//#[test]
-//fn test_poly_0st_nosoluce()  {
-//    let poly = Polynome2S::new(0.0, 0.0, 6.0);
-//    let polyroots = poly.get_roots();
-//    assert_eq!(polyroots.roots, None);
-//    assert_eq!(polyroots.all_reals, false);
-//    assert_eq!(polyroots.degree, 0);
-//}
-

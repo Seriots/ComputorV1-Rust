@@ -15,6 +15,10 @@ fn display_expression(poly_parts: &Vec<PolynomePart>, reduced_poly: &Vec<Polynom
     let mut is_opright = false;
     let mut first = 1;
 
+    if poly_parts.len() == 0 && reduced_poly.len() == 0{
+        println!("0 = 0");
+        return;
+    }
     for elem in reduced_poly.iter() {
         print!("{:.prec$}", elem, prec=first);
         if first == 1 {
@@ -81,20 +85,26 @@ fn main() {
     // skip first argument
     let mut iter = args.iter();
     iter.next();
+    let mut first = true;
     for arg in iter {
+        if first {
+            first = false;
+        } else {
+            println!();
+        }
         if let Some(user_input) = parse_input(arg.to_string()) {
             let reduced_poly = reduce_expression(user_input);
              
             if let Some(poly2s) = poly::Polynome2S::from_polypart(&reduced_poly) {
                 let polyroots = poly2s.get_roots();
                     println!("The polynomial degree: {}", polyroots.degree);
-                    println!("{}\n", polyroots);
+                    println!("{}", polyroots);
             }
             else {
                 let max_power = reduced_poly.iter().max_by(|a, b| a.power.cmp(&b.power)).unwrap().power;
                 let polyroots = PolyRoots::new(None, false, max_power, 0.0);
                 println!("The polynomial degree: {}", polyroots.degree);
-                println!("{}\n", polyroots);
+                println!("{}", polyroots);
             }
         }
     }
