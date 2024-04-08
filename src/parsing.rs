@@ -141,7 +141,7 @@ pub fn display_error(base: &String, error_index: usize) -> Option<Vec<PolynomePa
     if error_index >= base.len() - 1 {
         println!("Error in input: '\x1b[1m{}\x1b[0m'", base);
     } else {
-        println!("Error in input: '\x1b[1m{}\x1b[91m{}\x1b[0m{}\x1b[0m'", base[..error_index].to_string(), base[error_index..error_index + 1].to_string(), base[error_index + 1..].to_string());
+        println!("Error in input: '\x1b[1m{}\x1b[91m{}\x1b[0m\x1b[1m{}\x1b[0m'", base[..error_index].to_string(), base[error_index..error_index + 1].to_string(), base[error_index + 1..].to_string());
     }
     println!("\x1b[1m{}", "~".repeat(error_index as usize + 17) + "\x1b[91m^\x1b[0m");
     println!("Invalid input format please format each part as 'ax^b' with a, b as float and integer");

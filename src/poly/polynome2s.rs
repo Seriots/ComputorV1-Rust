@@ -229,6 +229,9 @@ impl Display for PolyRoots {
             if self.all_reals {
                 return write!(f, "Each number is a solution")
             }
+            else if self.degree > 2 {
+                return write!(f, "The polynomial degree is strictly greater than 2, I can't solve.")
+            }
             else {
                 return write!(f, "There is no solution")
             }

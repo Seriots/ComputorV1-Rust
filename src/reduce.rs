@@ -3,7 +3,6 @@ use crate::poly::PolynomePart;
 fn display_expression(poly_parts: &Vec<PolynomePart>, reduced_poly: &Vec<PolynomePart>, power_reduced: &Vec<u8>) {
     let mut is_opright = false;
     let mut first = 1;
-
     if poly_parts.len() == 0 && reduced_poly.len() == 0{
         println!("0 = 0");
         return;
@@ -62,7 +61,8 @@ pub fn reduce_expression(poly_parts: Vec<PolynomePart>) -> Vec<PolynomePart> {
     }
 
     reduced_poly.sort_by(|a, b| a.power.cmp(&b.power));
+    reduced_poly.retain(|x| x.coef != 0.0);
     print!("Reduced form: ");
-    display_expression(&poly_parts, &reduced_poly, &power_reduced);
+    display_expression(&Vec::new(), &reduced_poly, &power_reduced);
     return reduced_poly;
 }
